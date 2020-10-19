@@ -51,4 +51,10 @@ This ensures that the VM pods are placed on the cores that will not be used by a
 
 [CPU Manager documentation](https://docs.openshift.com/container-platform/4.5/virt/virtual_machines/advanced_vm_management/virt-dedicated-resources-vm.html).
 
+## Gotchas
+
+There is nothing to stop you from having more vCPUs for your VM than there are physical cores on the system. This is a Bad Thing, however, and it should be avoided.
+
+When you have more vCPUs than you do cores on the hypervisor, all you do is create contention between your vCPU QEMU threads for physical core time. They'll be competing for time on the silicon, and this will impact your VM performance.
+
 
