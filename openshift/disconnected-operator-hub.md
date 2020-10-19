@@ -6,6 +6,25 @@ The OperatorHub comprises a few components:
 * The OperatorHub Catalog Image. This is actually a gRPC server and SQLite database that is queried by the marketplace operator; this is what populates the OperatorHub section of the OpenShift Console.
 * The collection of images used by the operators in the catalog
 
+## Pre-requisites
+
+### Documentation
+
+This document must be read in parallel with the official Red Hat OpenShift documentation on using the OperatorHub in restricted networks, [available here](https://docs.openshift.com/container-platform/4.5/operators/admin/olm-restricted-networks.html).
+
+### Physical hosts
+
+This guide expects two VMs or physical machines, one on either side of your airgap. The hostnames can be whatever you like, but for this article I use `connected.home.lab` and `disconnected.home.lab` to illustrate which side of the air-gap they will be on.
+
+* `connected.home.lab` - this is Internet-connected and will be where you run your `oc adm release mirror` and `oc adm catalog mirror` commands from.
+* `disconnected.home.lab` - this will be the destination host for your data transfer, and will be where you then push the mirrored content to a destination registry.
+
+### Air-gapped registry
+
+In this article I assume that you already have an official destination for your air-gapped containers, e.g. Red Hat Quay.
+
+If you do not, then you can also use the Docker v2 registry we will be standing up on `disconnected.home.lab` as a temporary measure too. If this is you, then you can stop reading after step 6.
+
 ## The environment
 
 This article assumes an air-gapped environment, where OperatorHub images must be somehow transferred to removable media, brought across an air-gap, and then uploaded to another host for subsequent use.
@@ -17,7 +36,7 @@ At a high level, the following steps are performed:
 1. Stand up an Internet-connected Docker v2 registry as a target for OperatorHub image mirroring.
 2. Create the OperatorHub bundle, mirroring it into the Docker v2 registry.
 3. Mirror all of the OperatorHub images into the Docker v2 registry.
-4. Save a copy of `docker.io/_/registry:2` to disk`
+4. Save a copy of `docker.io/library/registry:2` to disk`.
 5. Transfer the data directory of the registry across the air-gap. Also include the ImageContentSourcePolicy, the mappings.txt file, and your `registry:2` image.
 6. On the air-gapped host, stand up a new Docker v2 registry and mount the transferred data directory.
 7. Using mappings.txt, create a new source-to-destination mapping file with the source as the air-gapped host, and the destination as the final corporate registry.
