@@ -10,6 +10,8 @@ The OperatorHub comprises a few components:
 
 This article assumes an air-gapped environment, where OperatorHub images must be somehow transferred to removable media, brought across an air-gap, and then uploaded to another host for subsequent use.
 
+![Air-gapped architectural diagram](/_images/disconnected-operator-hub-concept.png)
+
 ## Pre-requisites
 
 ### Documentation
