@@ -17,10 +17,11 @@ At a high level, the following steps are performed:
 1. Stand up an Internet-connected Docker v2 registry as a target for OperatorHub image mirroring.
 2. Create the OperatorHub bundle, mirroring it into the Docker v2 registry.
 3. Mirror all of the OperatorHub images into the Docker v2 registry.
-4. Transfer the data directory of the registry across the air-gap. Also include the ImageContentSourcePolicy and mappings.txt file.
-5. On the air-gapped host, stand up a new Docker v2 registry and mount the transferred data directory.
-6. Using mappings.txt, create a new source-to-destination mapping file with the source as the air-gapped host, and the destination as the final corporate registry.
-7. Use `oc image mirror` or `skopeo copy --all` to perform the copy.
+4. Save a copy of `docker.io/_/registry:2` to disk`
+5. Transfer the data directory of the registry across the air-gap. Also include the ImageContentSourcePolicy, the mappings.txt file, and your `registry:2` image.
+6. On the air-gapped host, stand up a new Docker v2 registry and mount the transferred data directory.
+7. Using mappings.txt, create a new source-to-destination mapping file with the source as the air-gapped host, and the destination as the final corporate registry.
+8. Use `oc image mirror` or `skopeo copy --all` to perform the copy.
 
 ## Step 1: stand up the Docker v2 registry.
 
@@ -126,3 +127,48 @@ There is a design gotcha in the mirroring library, whereby if you specify `--fil
 
 In short, `--filter-by-os=".*"` is the way to go for now.
 
+## Step 4: bring a copy of the Docker v2 registry container
+
+If you do not have it already, you will need the `docker.io/_/registery:2` container in your air-gapped environment.
+
+Your simplest course of action is to `podman save` this to your removable media, transfer it over the airgap, then `podman load` followed by `podman run` on the other side of the air-gap.
+
+```
+[root@registry ~]# podman save docker.io/library/registry:2 -o registry_2_image.tar
+```
+
+## Step 5: data transfer
+
+Using whatever data transfer process applies in your environment, bring the entire contents of the directory you mounted to `/var/lib/registry` in the container, plus `imageContentSourcePolicy.yaml`, `mappings.txt` and `registry:2` tarball, across the air-gap.
+
+From here on I will assume you have them both available somewhere on your air-gapped host.
+
+This air-gapped host will be `disconnected.home.lab`.
+
+## Step 6: Stand up your docker v2 registry
+
+If you don't have it in the environment, `podman load` your `registry:2` tarball and then `podman run` it, just like you did on the connected side. 
+
+Use TLS certificates and/or authentication as required by your security policy.
+
+Make sure you mount your mirrored registry data directory to `/var/lib/registry` in the container.
+
+```
+[root@disconnected ~]# podman load < registry_2_image.tar
+Getting image source signatures
+Copying blob b3f465d7c4d1 skipped: already exists
+Copying blob 3e207b409db3 skipped: already exists
+Copying blob 239a096513b5 skipped: already exists
+Copying blob a5f27630cdd9 skipped: already exists
+Copying blob f5b9430e0e42 skipped: already exists
+Copying config 2d4f4b5309 done
+Writing manifest to image destination
+Storing signatures
+Loaded image(s): docker.io/library/registry:2
+```
+
+You will now have all of your mirrored OperatorHub images, and associated catalog, available in your air-gapped environment.
+
+The next step is to push them to a destination registry, assuming you aren't using your Docker v2 registry on your air-gapped destination host.
+
+## Step 7: Customise mappings.txt
