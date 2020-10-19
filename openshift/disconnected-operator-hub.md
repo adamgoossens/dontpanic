@@ -3,7 +3,7 @@
 The OperatorHub comprises a few components:
 
 * The OpenShift Marketplace operator, under the `openshift-marketplace` namespace.
-* The OperatorHub Catalog Image, that is actually a gRPC server that is queried by the marketplace operator.
+* The OperatorHub Catalog Image. This is actually a gRPC server and SQLite database that is queried by the marketplace operator; this is what populates the OperatorHub section of the OpenShift Console.
 * The collection of images used by the operators in the catalog
 
 ## The environment
@@ -57,4 +57,34 @@ podman run \
   -e REGISTRY_STORAGE_DELETE_ENABLED=true \
   -d \
   docker.io/library/registry:2
+```
+
+## Step 2: Create the OperatorHub bundle image
+
+The bundle image will hold all of the metadata and Kubernetes resources for all operators. This example we only mirror `redhat-operators`. We are going to mirror this bundle image directly into our Docker v2 registry we stood up on the host.
+
+In OpenShift 4.5 and below, there is no easy way to adjust the bundle to include only a subset of the operators (e.g. to only those that work in air-gapped environments), and so the simplest solution is to bring across all of them.
+
+In OpenShift 4.6 and above it will be possible to customise the bundle to prune out all operators except for ones you specify. When this is released, this guide will be updated.
+
+Example:
+
+```
+[root@connected bin]# cat ~/bin/catalog-build
+#!/bin/bash
+LOCAL_SECRET_JSON=/root/pull.json
+
+oc adm -a ${LOCAL_SECRET_JSON} catalog build \
+  --appregistry-org redhat-operators \
+  --from=registry.redhat.io/openshift4/ose-operator-registry:v4.5 \
+  --filter-by-os="linux/amd64" \
+  --to=connected.home.lab:5000/olm/redhat-operators:v1
+
+[root@registry bin]# catalog-build
+using registry.redhat.io/openshift4/ose-operator-registry:v4.5 as a base image for building
+...
+INFO[0047] directory                                     dir=/tmp/cache-254675220/manifests-688087437 file=web-terminal-_656cyb8 load=package
+INFO[0047] directory                                     dir=/tmp/cache-254675220/manifests-688087437 file=1.0.1 load=package
+Uploading ... 10.09MB/s
+Pushed sha256:ccfb046baa4d3ad06f4e657d728c43d396d5eb7687e4272ef065be5e1aa70c37 to connected.home.lab:5000/olm/redhat-operators:v1
 ```
