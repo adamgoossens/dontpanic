@@ -191,3 +191,46 @@ You will now have all of your mirrored OperatorHub images, and associated catalo
 The next step is to push them to a destination registry, assuming you aren't using your Docker v2 registry on your air-gapped destination host.
 
 ## Step 7: Customise mappings.txt
+
+The mappings.txt file has the following basic structure. Each line is one container image, and the line is of the form:
+
+```
+source.registry/repository/image@sha256:<digest>=destination.registry/repository/image:<tag>
+```
+
+The source image may also be a tag, but for air-gapped operators **only images referenced by digest are supported**.
+
+We will build a new mapping.txt file where we change the source registry to `disconnected.home.lab` and the destination registry to our official container registry in the air-gapped environment - here, that'll be `quay.air.gapped`.
+
+Some basic bash magic is all that's required:
+
+```
+[root@disconneccted tmp]# UPSTREAM_MIRROR_HOST="connected.home.lab:5000"
+[root@disconneccted tmp]# SOURCE_REGISTRY="disconnected.home.lab:5000"
+[root@disconneccted tmp]# DESTINATION_REGISTRY="quay.air.gapped"
+[root@registry tmp]# sed -e "s/$UPSTREAM_MIRROR_HOST/$DESTINATION_REGISTRY/" mappings.txt | sed -r -e "s#^[^/]+/(.*)#${SOURCE_REGISTRY}/\1#g" > mappings-new.txt
+```
+
+From here, we can take `mappings-new.txt` and feed it into `oc image mirror`:
+
+```
+[root@disconnected tmp]# oc image mirror -f ./mappings-new.txt --filter-by-os=".*" --keep-manifest=true
+```
+
+## Step 8: Update imageContentSourcePolicy.yaml
+
+We will also need to change the mirrors listed in `imageContentSourcePolicy.yaml`, as these will be set to your upstream mirroring host. Again, `sed` to the rescue:
+
+```
+[root@disconnected tmp]# sed -e "s/$UPSTREAM_MIRROR_HOST/$DESTINATION_REGISTRY/g" imageContentSourcePolicy.yaml  > imageContentSourcePolicy-new.yaml
+```
+This will push all of your containers from `disconnected.home.lab` up to `quay.air.gapped`, and from here you can go ahead and create your new `CatalogSource` custom resource, following this direction.
+
+## Step 9: Continue with OperatorHub deployment.
+
+Follow the remaining steps [here](https://docs.openshift.com/container-platform/4.5/operators/admin/olm-restricted-networks.html#olm-restricted-networks-operatorhub_olm-restricted-networks) to:
+
+* Disable existing OperatorHub sources.
+* Create your `ImageContentSourcePolicy` on your cluster - note, be prepared for all of your nodes to reboot while the MachineConfigOperator rolls out the changes
+* Create a new `CatalogSource` to point at the bundle image that you mirrored to your disconnected registry.
+* Start using the OperatorHub!
