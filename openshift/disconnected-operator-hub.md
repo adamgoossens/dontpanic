@@ -150,7 +150,7 @@ In short, `--filter-by-os=".*"` is the way to go for now.
 
 ## Step 4: bring a copy of the Docker v2 registry container
 
-If you do not have it already, you will need the `docker.io/_/registery:2` container in your air-gapped environment.
+If you do not have it already, you will need the `docker.io/library/registry:2` container in your air-gapped environment.
 
 Your simplest course of action is to `podman save` this to your removable media, transfer it over the airgap, then `podman load` followed by `podman run` on the other side of the air-gap.
 
