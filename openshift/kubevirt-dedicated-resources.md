@@ -31,6 +31,8 @@ You would modify the CPU topology for a couple of reasons:
 
 For a standard VM that doesn't require a custom CPU topology, I would leave this alone.
 
+The default is a topology of 1 core per socket, 1 thread per core, and the number of sockets equal to the desired number of vCPUS.
+
 ## Pod Requests
 
 The `virt-launcher` pod only asks for a default of 100 millicores as a request, and has no limit specified. The `qemu-kvm` process that is your VM will run within the requests/limits constraints of the `virt-launcher` pod.
@@ -41,11 +43,19 @@ If you increase the vCPU count by adjusting the sockets, cores and threads param
 
 This means that if the node is heavily committed, you will end up with your VM being squeezed into just 100 millicores worth of time - this is not going to work, and the VM will run miserably.
 
+## Setting a guaranteed quality-of-service for the VM
+
+To ensure that your VM pod gets the expected core allocation, change `spec.domain.resources.requests.cpu` and `spec.domain.resources.limits.cpu` in the `VirtualMachine` definition.
+
+The CPU request and limit must be identical.
+
+Start the VM again, and the `virt-launcher` pod will have an increased `request` and `limit`.
+
+You cannot set both `spec.domain.cpu` and `spec.domain.requests.cpu`/`spec.domain.limits.cpu` at the same time. One or the other.
+
 ## Dedicated Resources
 
-Essentially we need dedicated resources for the VM, particularly when nodes are heavily committed.
-
-This ensures that the VM pods are placed on the cores that will not be used by anything else. Essentially, this is CPU pinning. It ensures that nothing but the VM will run on these cores, and will improve performance and latency for the VM.
+For VMs that need no-kidding dedicated resources, i.e. their own CPU cores that nothing else will ever be scheduled on, dedicated resources are required. This is CPU pinning; for VMs that require predicatable latency this is a must-do.
 
 [Dedicated resources documentation](https://docs.openshift.com/container-platform/4.5/virt/virtual_machines/advanced_vm_management/virt-dedicated-resources-vm.html).
 
