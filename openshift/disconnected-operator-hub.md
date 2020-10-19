@@ -80,7 +80,7 @@ oc adm -a ${LOCAL_SECRET_JSON} catalog build \
   --filter-by-os="linux/amd64" \
   --to=connected.home.lab:5000/olm/redhat-operators:v1
 
-[root@registry bin]# catalog-build
+[root@connected bin]# catalog-build
 using registry.redhat.io/openshift4/ose-operator-registry:v4.5 as a base image for building
 ...
 INFO[0047] directory                                     dir=/tmp/cache-254675220/manifests-688087437 file=web-terminal-_656cyb8 load=package
@@ -88,3 +88,25 @@ INFO[0047] directory                                     dir=/tmp/cache-25467522
 Uploading ... 10.09MB/s
 Pushed sha256:ccfb046baa4d3ad06f4e657d728c43d396d5eb7687e4272ef065be5e1aa70c37 to connected.home.lab:5000/olm/redhat-operators:v1
 ```
+
+You now have a catalog bundle image available in `connected.home.lab:5000/olm/redhat-operators:v1`
+
+## Step 3: Mirror the OperatorHub images
+
+This is another step where while you *can* adjust it to mirror only the content you need, if you don't care about data transfer then it's quicker and simpler to just mirror the lot.
+
+### --manifests-only, or not?
+
+When using the `oc adm catalog mirror` command, you have the option of providing `--manifests-only=true` to the command. This will result in only the `imageContentSourcePolicies.yaml` and `mapping.txt` files being written to disk; no actual mirroring will take place.
+
+Use this when you want to customise the `mapping.txt` file to reduce the mirroring overhead.
+
+**Note**: if you do not do manifests only mirroring, you **must** set `--filter-by-os=".*"`, as discussed next.
+
+### --filter-by-os - watch out
+
+Whichever command performs the actual image mirroring (e.g. `oc adm catalog mirror` or `oc image mirror`), this command must have `--filter-by-os` specified and it **must** be set to `--filter-by-os=".*"`. This is to ensure that the mirroring code mirrors the manifest lists in their entirety - the Operators in the catalog generally refer to the manifest list digests, *not* to the digest of a particular image architecture.
+
+There is a design gotcha in the mirroring library, whereby if you specify `--filter-by-os="linux/amd64` it will build a **new** manifest list that contains only the `linux/amd64` architecture image. This new manifest list will have a completely different sha256 digest from the upstream manifest list, and so the operator that references the upstream manifest list will fail to run.
+
+In short, `--filter-by-os=".*"` is the way to go for now.
