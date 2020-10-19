@@ -95,6 +95,21 @@ You now have a catalog bundle image available in `connected.home.lab:5000/olm/re
 
 This is another step where while you *can* adjust it to mirror only the content you need, if you don't care about data transfer then it's quicker and simpler to just mirror the lot.
 
+```
+[root@registry bin]# cat catalog-mirror
+#!/bin/bash
+
+LOCAL_SECRET_JSON=/root/pull.json
+
+oc adm -a ${LOCAL_SECRET_JSON} catalog mirror \
+  connected.home.lab:5000/olm/redhat-operators:v1 \
+  connected.home.lab:5000 \
+  --filter-by-os=".*"
+
+# get a coffee, maybe lunch and dinner too, because this will take a long time.
+[root@registry bin]# catalog-mirror
+```
+
 ### --manifests-only, or not?
 
 When using the `oc adm catalog mirror` command, you have the option of providing `--manifests-only=true` to the command. This will result in only the `imageContentSourcePolicies.yaml` and `mapping.txt` files being written to disk; no actual mirroring will take place.
@@ -110,3 +125,4 @@ Whichever command performs the actual image mirroring (e.g. `oc adm catalog mirr
 There is a design gotcha in the mirroring library, whereby if you specify `--filter-by-os="linux/amd64` it will build a **new** manifest list that contains only the `linux/amd64` architecture image. This new manifest list will have a completely different sha256 digest from the upstream manifest list, and so the operator that references the upstream manifest list will fail to run.
 
 In short, `--filter-by-os=".*"` is the way to go for now.
+
