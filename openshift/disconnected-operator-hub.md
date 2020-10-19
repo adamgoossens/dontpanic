@@ -211,6 +211,12 @@ Some basic bash magic is all that's required:
 [root@registry tmp]# sed -e "s/$UPSTREAM_MIRROR_HOST/$DESTINATION_REGISTRY/" mappings.txt | sed -r -e "s#^[^/]+/(.*)#${SOURCE_REGISTRY}/\1#g" > mappings-new.txt
 ```
 
+Also, add your operator bundle image into the mapping file - we need this to be pushed to the registry too:
+
+```
+[root@registry tmp]# echo "$UPSTREAM_MIRROR_HOST/olm/redhat-operators:v1=$DESTINATION_REGISTRY/olm/redhat-operators:v1" >> mappings-new.txt
+```
+
 From here, we can take `mappings-new.txt` and feed it into `oc image mirror`:
 
 ```
