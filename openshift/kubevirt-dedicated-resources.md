@@ -40,3 +40,15 @@ That means your VM will be given whatever spare capacity is available on the hos
 If you increase the vCPU count by adjusting the sockets, cores and threads parameters above, all you will do is increase the number of QEMU threads running in your `qemu-kvm` process. All of these threads will still reside within the cgroup constraints of your pod - in short, they'll start competing with one another for increasingly scarce CPU time.
 
 This means that if the node is heavily committed, you will end up with your VM being squeezed into just 100 millicores worth of time - this is not going to work, and the VM will run miserably.
+
+## Dedicated Resources
+
+Essentially we need dedicated resources for the VM, particularly when nodes are heavily committed.
+
+This ensures that the VM pods are placed on the cores that will not be used by anything else. Essentially, this is CPU pinning. It ensures that nothing but the VM will run on these cores, and will improve performance and latency for the VM.
+
+[Dedicated resources documentation](https://docs.openshift.com/container-platform/4.5/virt/virtual_machines/advanced_vm_management/virt-dedicated-resources-vm.html).
+
+[CPU Manager documentation](https://docs.openshift.com/container-platform/4.5/virt/virtual_machines/advanced_vm_management/virt-dedicated-resources-vm.html).
+
+
