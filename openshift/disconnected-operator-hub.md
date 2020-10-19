@@ -6,6 +6,10 @@ The OperatorHub comprises a few components:
 * The OperatorHub Catalog Image. This is actually a gRPC server and SQLite database that is queried by the marketplace operator; this is what populates the OperatorHub section of the OpenShift Console.
 * The collection of images used by the operators in the catalog
 
+## The environment
+
+This article assumes an air-gapped environment, where OperatorHub images must be somehow transferred to removable media, brought across an air-gap, and then uploaded to another host for subsequent use.
+
 ## Pre-requisites
 
 ### Documentation
@@ -23,11 +27,7 @@ This guide expects two VMs or physical machines, one on either side of your airg
 
 In this article I assume that you already have an official destination for your air-gapped containers, e.g. Red Hat Quay.
 
-If you do not, then you can also use the Docker v2 registry we will be standing up on `disconnected.home.lab` as a temporary measure too. If this is you, then you can stop reading after step 6.
-
-## The environment
-
-This article assumes an air-gapped environment, where OperatorHub images must be somehow transferred to removable media, brought across an air-gap, and then uploaded to another host for subsequent use.
+If you do not, then you can also use the Docker v2 registry we will be standing up on `disconnected.home.lab` as a temporary measure too. If this is you, then you can **skip step 6**, where we mirror everything to the destination registry.
 
 ## The process, high level
 
@@ -220,8 +220,10 @@ Also, add your operator bundle image into the mapping file - we need this to be 
 From here, we can take `mappings-new.txt` and feed it into `oc image mirror`:
 
 ```
-[root@disconnected tmp]# oc image mirror -f ./mappings-new.txt --filter-by-os=".*" --keep-manifest=true
+[root@disconnected tmp]# oc image mirror -f ./mappings-new.txt --filter-by-os=".*"
 ```
+
+Everything should be mirrored into your final destination registry. **Note**: don't forget `--filter-by-os=".*"`.
 
 ## Step 8: Update imageContentSourcePolicy.yaml
 
