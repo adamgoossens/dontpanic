@@ -61,6 +61,8 @@ For VMs that need no-kidding dedicated resources, i.e. their own CPU cores that 
 
 [CPU Manager documentation](https://docs.openshift.com/container-platform/4.5/virt/virtual_machines/advanced_vm_management/virt-dedicated-resources-vm.html).
 
+[Kubevirt doco](https://kubevirt.io/user-guide/#/creation/dedicated-cpu).
+
 ## Gotchas
 
 There is nothing to stop you from having more vCPUs for your VM than there are physical cores on the system. This is a Bad Thing, however, and it should be avoided.
