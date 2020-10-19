@@ -96,7 +96,7 @@ You now have a catalog bundle image available in `connected.home.lab:5000/olm/re
 This is another step where while you *can* adjust it to mirror only the content you need, if you don't care about data transfer then it's quicker and simpler to just mirror the lot.
 
 ```
-[root@registry bin]# cat catalog-mirror
+[root@connected bin]# cat catalog-mirror
 #!/bin/bash
 
 LOCAL_SECRET_JSON=/root/pull.json
@@ -107,7 +107,7 @@ oc adm -a ${LOCAL_SECRET_JSON} catalog mirror \
   --filter-by-os=".*"
 
 # get a coffee, maybe lunch and dinner too, because this will take a long time.
-[root@registry bin]# catalog-mirror
+[root@connected bin]# catalog-mirror
 ```
 
 ### --manifests-only, or not?
