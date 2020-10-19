@@ -230,7 +230,6 @@ We will also need to change the mirrors listed in `imageContentSourcePolicy.yaml
 ```
 [root@disconnected tmp]# sed -e "s/$UPSTREAM_MIRROR_HOST/$DESTINATION_REGISTRY/g" imageContentSourcePolicy.yaml  > imageContentSourcePolicy-new.yaml
 ```
-This will push all of your containers from `disconnected.home.lab` up to `quay.air.gapped`, and from here you can go ahead and create your new `CatalogSource` custom resource, following this direction.
 
 ## Step 9: Continue with OperatorHub deployment.
 
