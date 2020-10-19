@@ -37,4 +37,6 @@ The `virt-launcher` pod only asks for a default of 100 millicores as a request, 
 
 That means your VM will be given whatever spare capacity is available on the host above 100 millicores worth of CPU time, **regardless of how many cores/threads/sockets you specify in the `VirtualMachine` definition**.
 
+If you increase the vCPU count by adjusting the sockets, cores and threads parameters above, all you will do is increase the number of QEMU threads running in your `qemu-kvm` process. All of these threads will still reside within the cgroup constraints of your pod - in short, they'll start competing with one another for increasingly scarce CPU time.
+
 This means that if the node is heavily committed, you will end up with your VM being squeezed into just 100 millicores worth of time - this is not going to work, and the VM will run miserably.
